@@ -315,8 +315,13 @@ inline std::vector<SettingInfo> getSettingsList(const SdCardFontRegistry* regist
                           {StrId::STR_STATE_OFF, StrId::STR_STATE_TAP, StrId::STR_STATE_SWIPE_UP}, "tapForReaderMenu",
                           StrId::STR_CAT_CONTROLS),
         SettingInfo::Enum(StrId::STR_READER_CENTER_TAP, &CrossPointSettings::readerCenterTapAction,
-                          {StrId::STR_READER_MENU, StrId::STR_NEXT_PAGE, StrId::STR_PREV_PAGE, StrId::STR_NONE_OPT},
+                          {StrId::STR_READER_MENU, StrId::STR_NEXT_PAGE, StrId::STR_PREV_PAGE, StrId::STR_NONE_OPT,
+                           StrId::STR_DICTIONARY},
                           "readerCenterTapAction", StrId::STR_CAT_CONTROLS),
+        SettingInfo::Enum(StrId::STR_READER_CENTER_LONG_PRESS, &CrossPointSettings::readerCenterLongPressAction,
+                          {StrId::STR_KOSYNC, StrId::STR_DISABLED, StrId::STR_BOOKMARK_OPTION, StrId::STR_DICTIONARY,
+                           StrId::STR_READER_MENU},
+                          "readerCenterLongPressAction", StrId::STR_CAT_CONTROLS),
         SettingInfo::Toggle(StrId::STR_FRONT_BTN_FOLLOW_ORIENTATION, &CrossPointSettings::frontButtonFollowOrientation,
                             "frontButtonFollowOrientation", StrId::STR_CAT_CONTROLS),
         SettingInfo::Enum(StrId::STR_LONG_PRESS_BEHAVIOR, &CrossPointSettings::longPressButtonBehavior,
@@ -328,7 +333,7 @@ inline std::vector<SettingInfo> getSettingsList(const SdCardFontRegistry* regist
 #if FREEINK_CAP_TOUCH
         SettingInfo::Enum(StrId::STR_SHORT_PWR_BTN, &CrossPointSettings::shortPwrBtn,
                           {StrId::STR_IGNORE, StrId::STR_SLEEP, StrId::STR_PAGE_TURN, StrId::STR_FORCE_REFRESH,
-                           StrId::STR_FOOTNOTES, StrId::STR_CONFIRM},
+                           StrId::STR_FOOTNOTES, StrId::STR_CONFIRM, StrId::STR_DICTIONARY},
                           "shortPwrBtn", StrId::STR_CAT_CONTROLS),
 #else
         SettingInfo::Enum(
@@ -475,7 +480,8 @@ inline std::vector<SettingInfo> getSettingsList(const SdCardFontRegistry* regist
                            [](const SettingInfo& s) {
                              return s.nameId == StrId::STR_TOUCH_READER_CONTROLS ||
                                     s.nameId == StrId::STR_READER_MENU_STYLE ||
-                                    s.nameId == StrId::STR_READER_CENTER_TAP;
+                                    s.nameId == StrId::STR_READER_CENTER_TAP ||
+                                    s.nameId == StrId::STR_READER_CENTER_LONG_PRESS;
                            }),
             v.end());
   }

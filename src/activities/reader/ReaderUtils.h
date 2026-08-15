@@ -160,6 +160,30 @@ inline bool isTouchMenuTap(const GfxRenderer& renderer, const MappedInputManager
   return isReaderCenterTarget(renderer, x, y);
 }
 
+inline bool isTouchDictionaryTap(const GfxRenderer& renderer, const MappedInputManager& input) {
+  if (!SETTINGS.touchReaderControls || !input.hasTouch() ||
+      SETTINGS.readerCenterTapAction != CrossPointSettings::CENTER_TAP_DICTIONARY) {
+    return false;
+  }
+  int x = 0;
+  int y = 0;
+  return input.wasScreenTapped(x, y) && isReaderCenterTarget(renderer, x, y);
+}
+
+// A one-shot event fired while a stationary contact is still held. The input
+// layer suppresses the remainder of the contact, preventing its release from
+// also triggering the configured center-tap action.
+inline bool wasReaderCenterLongPress(const GfxRenderer& renderer, const MappedInputManager& input) {
+  if (!SETTINGS.touchReaderControls || !input.hasTouch()) return false;
+  const int width = renderer.getScreenWidth();
+  const int height = renderer.getScreenHeight();
+  const int shortAxis = std::min(width, height);
+  const int targetWidth = shortAxis / 3;
+  const int targetHeight = (shortAxis * 5) / 12;
+  return input.wasScreenLongPressInRect((width - targetWidth) / 2, (height - targetHeight) / 2, targetWidth,
+                                        targetHeight);
+}
+
 // Reader menu opens on the menu edge-swipe or a deliberate center-block tap. On home-key
 // boards a long press of the capacitive key runs the user-selected long-press
 // function instead (SETTINGS.longPressMenuFunction), not the menu.

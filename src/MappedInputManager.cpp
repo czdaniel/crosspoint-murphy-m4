@@ -177,6 +177,18 @@ bool MappedInputManager::wasScreenLongPress(int& x, int& y) const {
   return true;
 }
 
+bool MappedInputManager::wasScreenLongPressInRect(const int x, const int y, const int width, const int height) const {
+  float nx = 0.0f;
+  float ny = 0.0f;
+  if (!gpio.wasTouchLongPress(nx, ny)) return false;
+  int tx = 0;
+  int ty = 0;
+  renderer.tapToLogical(nx, ny, tx, ty);
+  if (tx < x || tx >= x + width || ty < y || ty >= y + height) return false;
+  gpio.suppressTouchContact();
+  return true;
+}
+
 bool MappedInputManager::isScreenTouchHeld(int& x, int& y) const {
   // Live contact position while the finger is down (no tap-slop gate) — drag tracking.
   float nx = 0.0f;

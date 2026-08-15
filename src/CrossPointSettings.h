@@ -144,6 +144,9 @@ class CrossPointSettings : public PersistableStore<CrossPointSettings> {
     FORCE_REFRESH = 3,
     FOOTNOTES = 4,
     PWR_CONFIRM = 5,
+    // Open word selection on the current EPUB page. Appended to preserve the
+    // persisted numeric values of the existing actions.
+    PWR_DICTIONARY = 6,
     SHORT_PWRBTN_COUNT
   };
 
@@ -200,6 +203,8 @@ class CrossPointSettings : public PersistableStore<CrossPointSettings> {
     CENTER_TAP_NEXT_PAGE = 1,
     CENTER_TAP_PREVIOUS_PAGE = 2,
     CENTER_TAP_NONE = 3,
+    // Appended to preserve persisted numeric values.
+    CENTER_TAP_DICTIONARY = 4,
     READER_CENTER_TAP_ACTION_COUNT
   };
 
@@ -326,6 +331,7 @@ class CrossPointSettings : public PersistableStore<CrossPointSettings> {
   uint8_t showReaderMenu = READER_MENU_TAP;
   // Action assigned to a tap in the center of the reading surface.
   uint8_t readerCenterTapAction = CENTER_TAP_READER_MENU;
+  uint8_t readerCenterLongPressAction = LP_MENU_DISABLED;
   // Frontlight quick-panel state. Category-less SettingsList entries persist
   // these without adding them to the regular Settings screen.
   uint8_t frontlightBrightness = 60;

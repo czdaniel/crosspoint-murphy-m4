@@ -468,6 +468,31 @@ void EpubReaderActivity::loop() {
   }
   const bool endOfBookMenuOpen = endOfBookMenuActive();
 
+  if (!endOfBookMenuOpen && ReaderUtils::wasReaderCenterLongPress(renderer, mappedInput)) {
+    switch (SETTINGS.readerCenterLongPressAction) {
+      case CrossPointSettings::LP_MENU_BOOKMARK:
+        if (!showBookmarkMessage) {
+          addBookmark();
+          showBookmarkMessage = true;
+          bookmarkMessageTime = millis();
+          requestUpdate();
+        }
+        return;
+      case CrossPointSettings::LP_MENU_KOSYNC:
+        launchKOReaderSync();
+        return;
+      case CrossPointSettings::LP_MENU_DICTIONARY:
+        if (!showDictionaryMessage) openDictionaryWordSelect();
+        return;
+      case CrossPointSettings::LP_MENU_READER_MENU:
+        openReaderMenu();
+        return;
+      case CrossPointSettings::LP_MENU_DISABLED:
+      default:
+        return;
+    }
+  }
+
   const unsigned long confirmHoldMs = confirmLongPressThreshold();
   // wasLongPressed() suppresses the release that follows it, so leave it unpolled while
   // the end-of-book menu owns Confirm -- otherwise the menu never sees that release.
@@ -543,6 +568,17 @@ void EpubReaderActivity::loop() {
         return;
       }
     }
+  }
+
+  if (ReaderUtils::isTouchDictionaryTap(renderer, mappedInput)) {
+    openDictionaryWordSelect();
+    return;
+  }
+
+  if (SETTINGS.shortPwrBtn == CrossPointSettings::SHORT_PWRBTN::PWR_DICTIONARY &&
+      mappedInput.wasReleased(MappedInputManager::Button::Power)) {
+    openDictionaryWordSelect();
+    return;
   }
 
   if (confirmReleased || ReaderUtils::isTouchMenuGesture(renderer, mappedInput)) {
