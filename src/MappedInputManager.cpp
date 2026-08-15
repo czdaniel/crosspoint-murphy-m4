@@ -69,6 +69,14 @@ bool MappedInputManager::mapButton(const Button button, bool (HalGPIO::*fn)(uint
       return (gpio.*fn)(SETTINGS.frontButtonBack);
     case Button::Confirm:
       // Logical Confirm maps to user-configured front button.
+      // Some boards expose one physical pin as both Confirm and Power. Its
+      // short-click role is selected through shortPwrBtn and dispatched after
+      // frontlight double-click disambiguation, so never leak the raw Confirm
+      // event here.
+      if (BoardConfig::ACTIVE.input.confirm >= 0 &&
+          BoardConfig::ACTIVE.input.confirm == BoardConfig::ACTIVE.input.power) {
+        return false;
+      }
       return (gpio.*fn)(SETTINGS.frontButtonConfirm);
     case Button::Left:
       // Logical Left maps to user-configured front button.
@@ -302,8 +310,8 @@ bool MappedInputManager::wasPowerConfirmClick() const {
   // so a raw release cannot fire Confirm immediately: the first click of a
   // double would open the menu before the second click toggled the light.
   // main.cpp's click tracker disambiguates and feeds the matured single click
-  // in via setPowerConfirmClickFrame once the double-click window passes.
-  if (Frontlight.present()) return powerConfirmClickFrame;
+  // in via setPowerClickFrame once the double-click window passes.
+  if (Frontlight.present()) return powerClickFrame;
   // The held-time gate drops the release of a long hold that did not reach the
   // sleep path (e.g. the power-on hold carried into the first frames after
   // wake); a genuine click is always shorter than the sleep threshold.
@@ -324,6 +332,10 @@ bool MappedInputManager::wasReleased(const Button button) const {
 #if FREEINK_CAP_TOUCH
   if (button == Button::Confirm && wasPowerConfirmClick()) return true;
 #endif
+  // All short-power bindings on a frontlight board consume the same matured
+  // single-click event. This prevents the first half of a double-click from
+  // turning a page, opening footnotes, refreshing, or otherwise firing early.
+  if (button == Button::Power && Frontlight.present()) return powerClickFrame;
   return mapButton(button, &HalGPIO::wasReleased);
 }
 

@@ -40,14 +40,10 @@ class MappedInputManager {
   MappedInputManager(HalGPIO& gpio, const GfxRenderer& renderer) : gpio(gpio), renderer(renderer) {}
 
   void update() const;
-#if FREEINK_CAP_TOUCH
-  // PWR_CONFIRM on boards with the power-button double-click frontlight toggle:
-  // the main loop's click tracker calls this every frame, true for
-  // exactly the frame where a single click matured (double-click window passed
-  // with no second click). wasPowerConfirmClick reads it instead of the raw
-  // release edge on those boards.
-  void setPowerConfirmClickFrame(const bool clicked) { powerConfirmClickFrame = clicked; }
-#endif
+  // Frontlight boards defer every short power-button action until the
+  // double-click window expires. The main loop sets this for exactly the frame
+  // where an unpaired click matures.
+  void setPowerClickFrame(const bool clicked) { powerClickFrame = clicked; }
   bool wasPressed(Button button) const;
   bool wasReleased(Button button) const;
   // One-shot threshold event while the button is down; consumes its release.
@@ -148,7 +144,6 @@ class MappedInputManager {
   mutable unsigned long touchHeldOverrideAt = 0;
   mutable uint16_t longPressFiredButtons = 0;
   mutable uint16_t suppressedReleaseButtons = 0;
-#if FREEINK_CAP_TOUCH
-  bool powerConfirmClickFrame = false;
-#endif
+  // Frame-scoped matured power click (see setPowerClickFrame).
+  bool powerClickFrame = false;
 };

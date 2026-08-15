@@ -673,19 +673,15 @@ void loop() {
     return;
   }
 
-  // PWR_CONFIRM on frontlight boards: the power button also carries the double-click
-  // frontlight toggle above, so a single click only becomes a Confirm press
-  // once the double-click window passes with no second click. The flag is
-  // frame-scoped: true for exactly the frame where the click matures.
-#if FREEINK_CAP_TOUCH
-  mappedInputManager.setPowerConfirmClickFrame(false);
-  if (SETTINGS.shortPwrBtn == CrossPointSettings::SHORT_PWRBTN::PWR_CONFIRM && Frontlight.present() &&
-      lastFrontlightPowerClickAt != 0 &&
+  // On frontlight boards every configured short-power action waits until the
+  // double-click window closes. The frame-scoped event below is consumed by
+  // MappedInputManager as Power, or as Confirm when PWR_CONFIRM is selected.
+  mappedInputManager.setPowerClickFrame(false);
+  if (Frontlight.present() && lastFrontlightPowerClickAt != 0 &&
       millis() - lastFrontlightPowerClickAt > FRONTLIGHT_POWER_DOUBLE_CLICK_MS) {
     lastFrontlightPowerClickAt = 0;
-    mappedInputManager.setPowerConfirmClickFrame(true);
+    mappedInputManager.setPowerClickFrame(true);
   }
-#endif
 
   const unsigned long sleepTimeoutMs = SETTINGS.getSleepTimeoutMs();
   if (sleepTimeoutMs > 0 && millis() - lastActivityTime >= sleepTimeoutMs) {
@@ -701,8 +697,15 @@ void loop() {
   static bool powerReleasedSinceWake = false;
   if (!gpio.isPressed(HalGPIO::BTN_POWER)) powerReleasedSinceWake = true;
 
+  // A shared Confirm/Power key always keeps a real hold gesture available for
+  // sleep. Selecting the configurable short-click Sleep action must not reduce
+  // this threshold to 10 ms, because that would pre-empt double-click.
+  const bool sharedConfirmPower = BoardConfig::ACTIVE.input.confirm >= 0 &&
+                                  BoardConfig::ACTIVE.input.confirm == BoardConfig::ACTIVE.input.power;
+  const uint16_t powerHoldDurationMs = sharedConfirmPower ? FRONTLIGHT_POWER_CLICK_MAX_HOLD_MS
+                                                          : SETTINGS.getPowerButtonDuration();
   if (powerReleasedSinceWake && millis() >= allowSleepAt && gpio.isPressed(HalGPIO::BTN_POWER) &&
-      gpio.getPowerButtonHeldTime() > SETTINGS.getPowerButtonDuration()) {
+      gpio.getPowerButtonHeldTime() > powerHoldDurationMs) {
     // If the screenshot combination is potentially being pressed, don't sleep
     if (gpio.isPressed(HalGPIO::BTN_DOWN)) {
       return;
@@ -724,6 +727,15 @@ void loop() {
     return;
   }
 #endif
+
+  // Frontlight-board short clicks arrive here only after the double-click
+  // window expires. This keeps the configurable Sleep action compatible with
+  // the double-click frontlight shortcut on a shared Confirm/Power key.
+  if (SETTINGS.shortPwrBtn == CrossPointSettings::SHORT_PWRBTN::SLEEP && Frontlight.present() &&
+      mappedInputManager.wasReleased(MappedInputManager::Button::Power)) {
+    enterDeepSleep();
+    return;
+  }
 
   // Refresh screen when power button is short-pressed with FORCE_REFRESH setting.
   if (SETTINGS.shortPwrBtn == CrossPointSettings::SHORT_PWRBTN::FORCE_REFRESH &&
