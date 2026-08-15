@@ -89,7 +89,11 @@ inline TouchPageTurn detectTouchPageTurn(GfxRenderer& renderer, const MappedInpu
     } else if (dir == MappedInputManager::SwipeDir::Right) {
       result.prev = true;
     }
-    return result;
+    if (result.prev || result.next ||
+        (SETTINGS.readerCenterTapAction != CrossPointSettings::CENTER_TAP_NEXT_PAGE &&
+         SETTINGS.readerCenterTapAction != CrossPointSettings::CENTER_TAP_PREVIOUS_PAGE)) {
+      return result;
+    }
   }
 
   int x = 0;
@@ -104,6 +108,12 @@ inline TouchPageTurn detectTouchPageTurn(GfxRenderer& renderer, const MappedInpu
   // (isTouchMenuTap below), so it must not double as a page turn.
   const int16_t zoneWidth = width / 3;
   const bool inverted = SETTINGS.touchReaderControls == CrossPointSettings::TOUCH_READER_INVERTED_TAP;
+  if (x >= width / 3 && x < (2 * width) / 3) {
+    result.prev = SETTINGS.readerCenterTapAction == CrossPointSettings::CENTER_TAP_PREVIOUS_PAGE;
+    result.next = SETTINGS.readerCenterTapAction == CrossPointSettings::CENTER_TAP_NEXT_PAGE;
+    result.heldMs = gpio.lastTouchHeldMs();
+    return result;
+  }
   const freeink::ui::TapZone zones[] = {
       {freeink::ui::Rect{0, 0, zoneWidth, height}, inverted ? READER_TOUCH_NEXT : READER_TOUCH_PREV},
       {freeink::ui::Rect{static_cast<int16_t>(width - zoneWidth), 0, zoneWidth, height},
@@ -128,6 +138,7 @@ inline TouchPageTurn detectTouchPageTurn(GfxRenderer& renderer, const MappedInpu
 inline bool isTouchMenuTap(const GfxRenderer& renderer, const MappedInputManager& input) {
   if (!input.hasTouch()) return false;
   if (SETTINGS.showReaderMenu != CrossPointSettings::READER_MENU_TAP) return false;
+  if (SETTINGS.readerCenterTapAction != CrossPointSettings::CENTER_TAP_READER_MENU) return false;
   int x = 0;
   int y = 0;
   if (!input.wasScreenTapped(x, y)) return false;

@@ -311,6 +311,9 @@ inline std::vector<SettingInfo> getSettingsList(const SdCardFontRegistry* regist
         SettingInfo::Enum(StrId::STR_SHOW_READER_MENU, &CrossPointSettings::showReaderMenu,
                           {StrId::STR_STATE_OFF, StrId::STR_STATE_TAP, StrId::STR_STATE_SWIPE_UP}, "tapForReaderMenu",
                           StrId::STR_CAT_CONTROLS),
+        SettingInfo::Enum(StrId::STR_READER_CENTER_TAP, &CrossPointSettings::readerCenterTapAction,
+                          {StrId::STR_READER_MENU, StrId::STR_NEXT_PAGE, StrId::STR_PREV_PAGE, StrId::STR_NONE_OPT},
+                          "readerCenterTapAction", StrId::STR_CAT_CONTROLS),
         SettingInfo::Toggle(StrId::STR_FRONT_BTN_FOLLOW_ORIENTATION, &CrossPointSettings::frontButtonFollowOrientation,
                             "frontButtonFollowOrientation", StrId::STR_CAT_CONTROLS),
         SettingInfo::Enum(StrId::STR_LONG_PRESS_BEHAVIOR, &CrossPointSettings::longPressButtonBehavior,
@@ -468,7 +471,8 @@ inline std::vector<SettingInfo> getSettingsList(const SdCardFontRegistry* regist
     v.erase(std::remove_if(v.begin(), v.end(),
                            [](const SettingInfo& s) {
                              return s.nameId == StrId::STR_TOUCH_READER_CONTROLS ||
-                                    s.nameId == StrId::STR_READER_MENU_STYLE;
+                                    s.nameId == StrId::STR_READER_MENU_STYLE ||
+                                    s.nameId == StrId::STR_READER_CENTER_TAP;
                            }),
             v.end());
   }

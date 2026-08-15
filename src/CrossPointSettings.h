@@ -189,6 +189,13 @@ class CrossPointSettings : public PersistableStore<CrossPointSettings> {
   // How the reader menu opens on touch boards. Persisted under the legacy
   // "tapForReaderMenu" key: 0/1 keep their old Off/Tap meaning.
   enum SHOW_READER_MENU { READER_MENU_OFF = 0, READER_MENU_TAP = 1, READER_MENU_SWIPE_UP = 2, SHOW_READER_MENU_COUNT };
+  enum READER_CENTER_TAP_ACTION {
+    CENTER_TAP_READER_MENU = 0,
+    CENTER_TAP_NEXT_PAGE = 1,
+    CENTER_TAP_PREVIOUS_PAGE = 2,
+    CENTER_TAP_NONE = 3,
+    READER_CENTER_TAP_ACTION_COUNT
+  };
 
   enum QUICK_RESUME_SLEEP_SCREEN {
     QUICK_RESUME_NEVER = 0,
@@ -309,6 +316,8 @@ class CrossPointSettings : public PersistableStore<CrossPointSettings> {
   // up-swipe). Only surfaced on home-key boards, where Home is the capacitive
   // key and the bottom edge is free; elsewhere it stays at the Tap default.
   uint8_t showReaderMenu = READER_MENU_TAP;
+  // Action assigned to a tap in the center of the reading surface.
+  uint8_t readerCenterTapAction = CENTER_TAP_READER_MENU;
   // Frontlight quick-panel state. Category-less SettingsList entries persist
   // these without adding them to the regular Settings screen.
   uint8_t frontlightBrightness = 60;
