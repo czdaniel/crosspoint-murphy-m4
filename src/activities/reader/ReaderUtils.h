@@ -1,5 +1,7 @@
 #pragma once
 
+#include <algorithm>
+
 #include <CrossPointSettings.h>
 #include <GfxRenderer.h>
 #include <HalGPIO.h>
@@ -74,6 +76,21 @@ struct TouchPageTurn {
   unsigned long heldMs;
 };
 
+// A deliberate target around the physical center of the reading surface,
+// rather than the entire full-height middle third. On the Murphy's 480x800
+// portrait screen this is 160x200 px. Keeping the dimensions based on the
+// shorter screen axis gives a similarly sized target after rotation.
+inline bool isReaderCenterTarget(const GfxRenderer& renderer, const int x, const int y) {
+  const int width = renderer.getScreenWidth();
+  const int height = renderer.getScreenHeight();
+  const int shortAxis = std::min(width, height);
+  const int targetWidth = shortAxis / 3;
+  const int targetHeight = (shortAxis * 5) / 12;
+  const int left = (width - targetWidth) / 2;
+  const int top = (height - targetHeight) / 2;
+  return x >= left && x < left + targetWidth && y >= top && y < top + targetHeight;
+}
+
 inline TouchPageTurn detectTouchPageTurn(GfxRenderer& renderer, const MappedInputManager& input) {
   TouchPageTurn result{false, false, 0};
   if (!SETTINGS.touchReaderControls || !input.hasTouch()) {
@@ -108,7 +125,7 @@ inline TouchPageTurn detectTouchPageTurn(GfxRenderer& renderer, const MappedInpu
   // (isTouchMenuTap below), so it must not double as a page turn.
   const int16_t zoneWidth = width / 3;
   const bool inverted = SETTINGS.touchReaderControls == CrossPointSettings::TOUCH_READER_INVERTED_TAP;
-  if (x >= width / 3 && x < (2 * width) / 3) {
+  if (isReaderCenterTarget(renderer, x, y)) {
     result.prev = SETTINGS.readerCenterTapAction == CrossPointSettings::CENTER_TAP_PREVIOUS_PAGE;
     result.next = SETTINGS.readerCenterTapAction == CrossPointSettings::CENTER_TAP_NEXT_PAGE;
     result.heldMs = gpio.lastTouchHeldMs();
@@ -130,11 +147,9 @@ inline TouchPageTurn detectTouchPageTurn(GfxRenderer& renderer, const MappedInpu
   return result;
 }
 
-// Tap in the center third of the screen: the tap path into the reader menu on
-// every touch board. The page-turn tap zones are the outer horizontal thirds,
-// so the centered rectangle remains free in tap mode. The Off/Swipe Up
-// alternatives are only surfaced on home-key boards (SettingsList), where the
-// menu stays reachable through the key's long-press function.
+// Tap in the deliberate center block: the tap path into the reader menu on
+// every touch board. The page-turn tap zones remain the outer thirds. The
+// Off/Swipe Up alternatives are only surfaced on home-key boards.
 inline bool isTouchMenuTap(const GfxRenderer& renderer, const MappedInputManager& input) {
   if (!input.hasTouch()) return false;
   if (SETTINGS.showReaderMenu != CrossPointSettings::READER_MENU_TAP) return false;
@@ -142,14 +157,10 @@ inline bool isTouchMenuTap(const GfxRenderer& renderer, const MappedInputManager
   int x = 0;
   int y = 0;
   if (!input.wasScreenTapped(x, y)) return false;
-  const int width = renderer.getScreenWidth();
-  const int height = renderer.getScreenHeight();
-  const int zoneWidth = width / 3;
-  const int zoneHeight = height / 3;
-  return x >= zoneWidth && x < width - zoneWidth && y >= zoneHeight && y < height - zoneHeight;
+  return isReaderCenterTarget(renderer, x, y);
 }
 
-// Reader menu opens on the menu edge-swipe or a center-third tap. On home-key
+// Reader menu opens on the menu edge-swipe or a deliberate center-block tap. On home-key
 // boards a long press of the capacitive key runs the user-selected long-press
 // function instead (SETTINGS.longPressMenuFunction), not the menu.
 // Menu gestures honor showReaderMenu independently of touchReaderControls,
