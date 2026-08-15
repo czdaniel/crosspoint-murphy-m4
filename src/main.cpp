@@ -48,11 +48,11 @@ FontDecompressor fontDecompressor;
 SdCardFontSystem sdFontSystem;
 FontCacheManager fontCacheManager(renderer.getFontMap(), renderer.getSdCardFonts());
 static unsigned long allowSleepAt = 0;
-static unsigned long lastX4ProPowerClickAt = 0;
+static unsigned long lastFrontlightPowerClickAt = 0;
 
 namespace {
-constexpr unsigned long X4PRO_POWER_DOUBLE_CLICK_MS = 500;
-constexpr unsigned long X4PRO_POWER_CLICK_MAX_HOLD_MS = 300;
+constexpr unsigned long FRONTLIGHT_POWER_DOUBLE_CLICK_MS = 500;
+constexpr unsigned long FRONTLIGHT_POWER_CLICK_MAX_HOLD_MS = 300;
 }  // namespace
 
 // A wake hold must never become an in-app power-button action.  Boot may continue
@@ -205,23 +205,23 @@ void restartToHomeAfterStorageHandoff() {
   ESP.restart();
 }
 
-bool handleX4ProFrontlightDoubleClick() {
-  if (!BoardConfig::isX4Pro() || !gpio.wasReleased(HalGPIO::BTN_POWER)) {
+bool handleFrontlightPowerDoubleClick() {
+  if (!Frontlight.present() || !gpio.wasReleased(HalGPIO::BTN_POWER)) {
     return false;
   }
 
   const unsigned long now = millis();
-  if (gpio.getPowerButtonHeldTime() > X4PRO_POWER_CLICK_MAX_HOLD_MS) {
-    lastX4ProPowerClickAt = 0;
+  if (gpio.getPowerButtonHeldTime() > FRONTLIGHT_POWER_CLICK_MAX_HOLD_MS) {
+    lastFrontlightPowerClickAt = 0;
     return false;
   }
 
-  if (lastX4ProPowerClickAt == 0 || now - lastX4ProPowerClickAt > X4PRO_POWER_DOUBLE_CLICK_MS) {
-    lastX4ProPowerClickAt = now;
+  if (lastFrontlightPowerClickAt == 0 || now - lastFrontlightPowerClickAt > FRONTLIGHT_POWER_DOUBLE_CLICK_MS) {
+    lastFrontlightPowerClickAt = now;
     return false;
   }
 
-  lastX4ProPowerClickAt = 0;
+  lastFrontlightPowerClickAt = 0;
   const bool lightOn = !Frontlight.isOn();
   Frontlight.setOn(lightOn);
   SETTINGS.frontlightOn = lightOn ? 1 : 0;
@@ -667,19 +667,22 @@ void loop() {
     screenshotComboActive = false;
   }
 
-  // Consume the second X4 Pro power-button release so it does not also run a
-  // configured short-power action after toggling the frontlight.
-  if (handleX4ProFrontlightDoubleClick()) {
+  // Frontlight-capable-board shortcut. Consume the second release so a configured
+  // short-power action does not also run for the click that toggled the light.
+  if (handleFrontlightPowerDoubleClick()) {
     return;
   }
 
+  // PWR_CONFIRM on frontlight boards: the power button also carries the double-click
+  // frontlight toggle above, so a single click only becomes a Confirm press
+  // once the double-click window passes with no second click. The flag is
+  // frame-scoped: true for exactly the frame where the click matures.
 #if FREEINK_CAP_TOUCH
-  // A single X4 Pro power click becomes Confirm only after the frontlight
-  // double-click window expires without a second click.
   mappedInputManager.setPowerConfirmClickFrame(false);
-  if (SETTINGS.shortPwrBtn == CrossPointSettings::SHORT_PWRBTN::PWR_CONFIRM && BoardConfig::isX4Pro() &&
-      lastX4ProPowerClickAt != 0 && millis() - lastX4ProPowerClickAt > X4PRO_POWER_DOUBLE_CLICK_MS) {
-    lastX4ProPowerClickAt = 0;
+  if (SETTINGS.shortPwrBtn == CrossPointSettings::SHORT_PWRBTN::PWR_CONFIRM && Frontlight.present() &&
+      lastFrontlightPowerClickAt != 0 &&
+      millis() - lastFrontlightPowerClickAt > FRONTLIGHT_POWER_DOUBLE_CLICK_MS) {
+    lastFrontlightPowerClickAt = 0;
     mappedInputManager.setPowerConfirmClickFrame(true);
   }
 #endif

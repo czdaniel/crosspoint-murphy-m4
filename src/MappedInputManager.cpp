@@ -298,9 +298,15 @@ bool MappedInputManager::wasLightPanelGesture() const {
 #if FREEINK_CAP_TOUCH
 bool MappedInputManager::wasPowerConfirmClick() const {
   if (!gpio.hasTouch() || SETTINGS.shortPwrBtn != CrossPointSettings::SHORT_PWRBTN::PWR_CONFIRM) return false;
-  // Wait out the X4 Pro's frontlight double-click window before treating its
-  // first release as Confirm. Other touch boards can use the release directly.
-  if (BoardConfig::isX4Pro()) return powerConfirmClickFrame;
+  // A frontlight board's power button also carries the double-click toggle,
+  // so a raw release cannot fire Confirm immediately: the first click of a
+  // double would open the menu before the second click toggled the light.
+  // main.cpp's click tracker disambiguates and feeds the matured single click
+  // in via setPowerConfirmClickFrame once the double-click window passes.
+  if (Frontlight.present()) return powerConfirmClickFrame;
+  // The held-time gate drops the release of a long hold that did not reach the
+  // sleep path (e.g. the power-on hold carried into the first frames after
+  // wake); a genuine click is always shorter than the sleep threshold.
   return gpio.wasReleased(HalGPIO::BTN_POWER) && gpio.getPowerButtonHeldTime() <= SETTINGS.getPowerButtonDuration();
 }
 #endif

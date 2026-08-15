@@ -41,8 +41,11 @@ class MappedInputManager {
 
   void update() const;
 #if FREEINK_CAP_TOUCH
-  // X4 Pro delays a single power click until its frontlight double-click window
-  // expires. The main loop supplies that one-frame event here.
+  // PWR_CONFIRM on boards with the power-button double-click frontlight toggle:
+  // the main loop's click tracker calls this every frame, true for
+  // exactly the frame where a single click matured (double-click window passed
+  // with no second click). wasPowerConfirmClick reads it instead of the raw
+  // release edge on those boards.
   void setPowerConfirmClickFrame(const bool clicked) { powerConfirmClickFrame = clicked; }
 #endif
   bool wasPressed(Button button) const;
