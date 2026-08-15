@@ -147,6 +147,7 @@ Conversion runs the firmware repo's `lib/EpdFont/scripts/fontconvert_sdcard.py` 
 
 ## Documentation
 
+- [Personal fork maintenance policy](./MAINTENANCE.md)
 - [User Guide](./USER_GUIDE.md)
 - [Web server usage](./docs/webserver.md)
 - [Web server endpoints](./docs/webserver-endpoints.md)
