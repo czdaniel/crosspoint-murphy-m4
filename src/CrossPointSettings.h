@@ -31,6 +31,12 @@ class CrossPointSettings : public PersistableStore<CrossPointSettings> {
     INVERTED_BLACK_AND_WHITE = 2,
     SLEEP_SCREEN_COVER_FILTER_COUNT
   };
+  enum SLEEP_SCREEN_CLEANUP {
+    SLEEP_CLEANUP_FAST = 0,
+    SLEEP_CLEANUP_CLEAN = 1,
+    SLEEP_CLEANUP_MAXIMUM = 2,
+    SLEEP_SCREEN_CLEANUP_COUNT
+  };
   enum STATUS_BAR_PROGRESS_BAR {
     BOOK_PROGRESS = 0,
     CHAPTER_PROGRESS = 1,
@@ -212,6 +218,8 @@ class CrossPointSettings : public PersistableStore<CrossPointSettings> {
   uint8_t sleepScreenCoverMode = FIT;
   // Sleep screen cover filter
   uint8_t sleepScreenCoverFilter = NO_FILTER;
+  // Panel clearing sequence before painting a non-quick-resume sleep screen.
+  uint8_t sleepScreenCleanup = SLEEP_CLEANUP_CLEAN;
   // Status bar settings
   uint8_t statusBarChapterPageCount = 1;
   uint8_t statusBarBookProgressPercentage = 1;

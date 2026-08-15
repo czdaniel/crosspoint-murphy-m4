@@ -588,11 +588,29 @@ void SleepActivity::renderCustomSleepScreen() const {
   renderDefaultSleepScreen();
 }
 
+// De-ghost before painting a sleep image. HALF/FULL on the X4 are both
+// single-shot absolute paints (BYPASS_RED) with no flush, so painting the
+// mostly-black inverted sleep image directly over a high-contrast prior screen
+// (a reader page) ghosts that residue through — reverting to FULL (#2471) never
+// fixed it because a single absolute paint doesn't scrub. Driving the whole
+// panel to white first resets the baseline, so the following single-pass image
+// paint lands clean. Costs one extra flash to white on sleep entry.
+void SleepActivity::preparePanelForSleep() const {
+  if (SETTINGS.sleepScreenCleanup == CrossPointSettings::SLEEP_CLEANUP_FAST) return;
+
+  if (SETTINGS.sleepScreenCleanup == CrossPointSettings::SLEEP_CLEANUP_MAXIMUM) {
+    renderer.clearScreen(0x00);
+    renderer.displayBuffer(HalDisplay::HALF_REFRESH);
+  }
+  renderer.clearScreen();
+  renderer.displayBuffer(HalDisplay::HALF_REFRESH);
+}
 // Sleep screens paint with a single HALF refresh (stock parity): the OEM X4
 // firmware's only clean refresh in normal operation is the single-pass 0xD7
 // sequence, used once for the sleep image. It never runs the multi-flash GC
 // waveform (0xF7) that FULL_REFRESH selects (#2471's blinking complaint).
 void SleepActivity::renderDefaultSleepScreen() const {
+  preparePanelForSleep();
   const auto pageWidth = renderer.getScreenWidth();
   const auto pageHeight = renderer.getScreenHeight();
 
@@ -610,6 +628,7 @@ void SleepActivity::renderDefaultSleepScreen() const {
 }
 
 void SleepActivity::renderBitmapSleepScreen(const Bitmap& bitmap, const bool preserveBackground) const {
+  if (!preserveBackground) preparePanelForSleep();
   const auto pageWidth = renderer.getScreenWidth();
   const auto pageHeight = renderer.getScreenHeight();
   const auto placement = calculateBitmapPlacement(bitmap.getWidth(), bitmap.getHeight(), renderer);
@@ -839,6 +858,7 @@ void SleepActivity::renderLastScreenSleepScreen() const {
 }
 
 void SleepActivity::renderBlankSleepScreen() const {
+  preparePanelForSleep();
   renderer.clearScreen();
   renderer.displayBuffer(HalDisplay::HALF_REFRESH);
 }

@@ -13,6 +13,9 @@ class SleepActivity final : public Activity {
   void onEnter() override;
 
  private:
+  // Apply the user-selected de-ghosting sequence before painting a sleep image.
+  // Quick Resume deliberately bypasses this because it retains the current page.
+  void preparePanelForSleep() const;
   void renderDefaultSleepScreen() const;
   void renderCustomSleepScreen() const;
   void renderCoverSleepScreen() const;
