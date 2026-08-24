@@ -37,6 +37,7 @@ class HalStorage::StorageLock {
 
 #define HAL_STORAGE_WRAPPED_CALL(method, ...) \
   HalStorage::StorageLock lock;               \
+  if (!SDCard.ready()) return {};             \
   return SDCard.method(__VA_ARGS__);
 
 std::vector<String> HalStorage::listFiles(const char* path, int maxFiles) {
@@ -83,22 +84,40 @@ HalFile& HalFile::operator=(HalFile&&) = default;
 
 HalFile HalStorage::open(const char* path, const oflag_t oflag) {
   StorageLock lock;  // ensure thread safety for the duration of this function
+  if (!SDCard.ready()) return {};
   return HalFile(std::make_unique<HalFile::Impl>(SDCard.open(path, oflag)));
 }
 
-bool HalStorage::mkdir(const char* path, const bool pFlag) { HAL_STORAGE_WRAPPED_CALL(mkdir, path, pFlag); }
-
-bool HalStorage::exists(const char* path) { HAL_STORAGE_WRAPPED_CALL(exists, path); }
-
-bool HalStorage::remove(const char* path) { HAL_STORAGE_WRAPPED_CALL(remove, path); }
-bool HalStorage::rename(const char* oldPath, const char* newPath) {
-  HAL_STORAGE_WRAPPED_CALL(rename, oldPath, newPath);
+bool HalStorage::mkdir(const char* path, const bool pFlag) {
+  StorageLock lock;
+  return SDCard.ready() && SDCard.mkdir(path, pFlag);
 }
 
-bool HalStorage::rmdir(const char* path) { HAL_STORAGE_WRAPPED_CALL(rmdir, path); }
+bool HalStorage::exists(const char* path) {
+  StorageLock lock;
+  return SDCard.ready() && SDCard.exists(path);
+}
+
+bool HalStorage::remove(const char* path) {
+  StorageLock lock;
+  return SDCard.ready() && SDCard.remove(path);
+}
+bool HalStorage::rename(const char* oldPath, const char* newPath) {
+  StorageLock lock;
+  return SDCard.ready() && SDCard.rename(oldPath, newPath);
+}
+
+bool HalStorage::rmdir(const char* path) {
+  StorageLock lock;
+  return SDCard.ready() && SDCard.rmdir(path);
+}
 
 bool HalStorage::openFileForRead(const char* moduleName, const char* path, HalFile& file) {
   StorageLock lock;  // ensure thread safety for the duration of this function
+  if (!SDCard.ready()) {
+    file = {};
+    return false;
+  }
   FsFile fsFile;
   bool ok = SDCard.openFileForRead(moduleName, path, fsFile);
   file = HalFile(std::make_unique<HalFile::Impl>(std::move(fsFile)));
@@ -115,6 +134,10 @@ bool HalStorage::openFileForRead(const char* moduleName, const String& path, Hal
 
 bool HalStorage::openFileForWrite(const char* moduleName, const char* path, HalFile& file) {
   StorageLock lock;  // ensure thread safety for the duration of this function
+  if (!SDCard.ready()) {
+    file = {};
+    return false;
+  }
   FsFile fsFile;
   bool ok = SDCard.openFileForWrite(moduleName, path, fsFile);
   file = HalFile(std::make_unique<HalFile::Impl>(std::move(fsFile)));
@@ -129,7 +152,10 @@ bool HalStorage::openFileForWrite(const char* moduleName, const String& path, Ha
   return openFileForWrite(moduleName, path.c_str(), file);
 }
 
-bool HalStorage::removeDir(const char* path) { HAL_STORAGE_WRAPPED_CALL(removeDir, path); }
+bool HalStorage::removeDir(const char* path) {
+  StorageLock lock;
+  return SDCard.ready() && SDCard.removeDir(path);
+}
 
 // HalFile implementation
 // Allow doing file operations while ensuring thread safety via HalStorage's mutex.

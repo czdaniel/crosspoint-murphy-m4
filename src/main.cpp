@@ -358,8 +358,9 @@ void setupDisplayAndFonts(bool seamless = false) {
   renderer.insertFont(UI_12_FONT_ID, ui12FontFamily);
   renderer.insertFont(SMALL_FONT_ID, smallFontFamily);
 
-  // Discover and load SD card fonts
-  sdFontSystem.begin(renderer);
+  if (Storage.ready()) {
+    sdFontSystem.begin(renderer);
+  }
 
   LOG_DBG("MAIN", "Fonts setup");
 }
@@ -459,23 +460,20 @@ void setup() {
       break;
   }
 
-  // SD Card Initialization
-  // We need 6 open files concurrently when parsing a new chapter
-  if (!Storage.begin()) {
-    LOG_ERR("MAIN", "SD card initialization failed");
-    setupDisplayAndFonts(isSilentReboot);
-    activityManager.goToFullScreenMessage("SD card error", EpdFontFamily::BOLD);
-    return;
+  const bool storageReady = Storage.begin();
+  if (!storageReady) {
+    LOG_ERR("MAIN", "SD card initialization failed; continuing without persistent storage");
   }
 
-  HalSystem::checkPanic();
-
-  SETTINGS.loadFromFile();
-  APP_STATE.loadFromFile();
-  RECENT_BOOKS.loadFromFile();
+  if (storageReady) {
+    HalSystem::checkPanic();
+    SETTINGS.loadFromFile();
+    APP_STATE.loadFromFile();
+    RECENT_BOOKS.loadFromFile();
+    KOREADER_STORE.loadFromFile();
+    OPDS_STORE.loadFromFile();
+  }
   I18N.setLanguage(static_cast<Language>(SETTINGS.language));
-  KOREADER_STORE.loadFromFile();
-  OPDS_STORE.loadFromFile();
   UITheme::getInstance().reload();
   ButtonNavigator::setMappedInputManager(mappedInputManager);
   // Frontlight PWM up (no-op on boards without one). Brightness + warmth are always
