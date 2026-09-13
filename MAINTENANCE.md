@@ -38,6 +38,18 @@ submodule pointer to an appropriate official SDK commit. If an SDK change ever
 becomes necessary, develop and upstream it separately, then repoint this
 repository after it is publicly available.
 
+### Known upstream touch issue
+
+The Murphy M4 FT6336 path currently allows a swipe release to also satisfy the
+tap predicate because `pollFt6336u()` does not maintain
+`touchMovedBeyondTapReleaseSlop` like the other touch backends. The personal
+application layer rejects taps that also qualify as swipes in
+`MappedInputManager::wasScreenTapped()` so scrolling reaches list handlers.
+
+When the official SDK fixes the FT6336 release classification, update the
+submodule and remove the application workaround after verifying taps, vertical
+menu scrolling, and reader gestures on the Murphy M4.
+
 ## Releases
 
 - Release builds must compile the `murphy_m4` PlatformIO environment.

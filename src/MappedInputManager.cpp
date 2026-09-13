@@ -148,6 +148,16 @@ void MappedInputManager::rememberTouchHeldTime() const {
 }
 
 bool MappedInputManager::wasScreenTapped(int& x, int& y) const {
+  // A release classified as a swipe must never also activate the element at
+  // its touch-down point. Some controller backends expose both predicates for
+  // the same release; wasSwipe() is non-consuming, so the activity can still
+  // handle the gesture after touch routing rejects the tap.
+  float swipeStartX = 0.0f;
+  float swipeStartY = 0.0f;
+  float swipeEndX = 0.0f;
+  float swipeEndY = 0.0f;
+  if (gpio.wasSwipe(swipeStartX, swipeStartY, swipeEndX, swipeEndY)) return false;
+
   float nx = 0.0f;
   float ny = 0.0f;
   if (!gpio.wasTouchTap(nx, ny)) return false;
