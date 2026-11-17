@@ -1,9 +1,8 @@
 # Personal Fork Maintenance
 
-This repository is Daniel's personal Murphy M4 flavor of CrossPoint Reader. It is
-a playground for private-use features and experiments. Other people may use it,
-but compatibility with Daniel's device and preferences takes priority over
-behaving like an independently maintained upstream distribution.
+This repository is Daniel's Murphy M4 flavor of CrossPoint Reader. It follows
+the official application as closely as possible and carries only the focused
+hardware, build, and packaging differences required for the Murphy M4.
 
 ## Sources of changes
 
@@ -11,10 +10,13 @@ behaving like an independently maintained upstream distribution.
 - Treat [CrossPoint Reader](https://github.com/crosspoint-reader/crosspoint-reader)
   as the primary upstream application repository.
 - CrossInk Reader may also be used as a source for suitable features and fixes.
-- Fetch and cherry-pick focused commits from either project instead of replacing
-  this repository wholesale or coupling its history to another fork.
+- Rebase the focused Murphy commits onto the current official integration branch,
+  presently `upstream/develop`, so the application remains straightforward to
+  compare and update.
 - Keep personal changes in small, focused commits so upstream changes remain easy
   to inspect, cherry-pick, adapt, or revert.
+- Drop local workarounds and feature patches when official CrossPoint or FreeInk
+  SDK provides the equivalent behavior.
 - Preserve Murphy M4 support when resolving conflicts. Do not import unrelated
   device-specific behavior unless it is intentionally wanted here.
 
@@ -49,6 +51,7 @@ repository after it is publicly available.
 
 ## Default decision rule
 
-When there is ambiguity, prefer a small application-level change in this
-repository, retain Murphy M4 behavior, and leave FreeInk SDK on an official
-publicly reachable commit.
+When there is ambiguity, prefer official CrossPoint behavior and APIs. Keep the
+smallest possible Murphy-specific delta, retain Murphy M4 hardware support, and
+leave FreeInk SDK on the same official, publicly reachable commit used upstream
+whenever that revision supports the device.

@@ -68,6 +68,17 @@ jobs:
           cp .pio/build/murphy_m4/firmware.bin "$asset"
           echo "name=$asset" >> "$GITHUB_OUTPUT"
 
+      - name: Prepare license asset
+        run: python3 scripts/build_release_license.py --env murphy_m4 --output dist/LICENSE
+
+      - name: Stage license asset
+        uses: actions/upload-artifact@v6
+        with:
+          name: release-license
+          path: dist/LICENSE
+          if-no-files-found: error
+          retention-days: 1
+
       - name: Stage firmware asset
         uses: actions/upload-artifact@v6
         with:
@@ -90,6 +101,12 @@ jobs:
           pattern: crosspoint-*-murphy-m4.bin
           merge-multiple: true
 
+      - name: Download license asset
+        uses: actions/download-artifact@v4
+        with:
+          name: release-license
+          path: dist
+
       - name: Attach firmware asset
         env:
           GH_TOKEN: ${{ github.token }}
@@ -98,4 +115,5 @@ jobs:
           version="${RELEASE_TAG#v}"
           asset="dist/crosspoint-${version}-murphy-m4.bin"
           test -s "$asset"
-          gh release upload "$RELEASE_TAG" "$asset" --repo "$GITHUB_REPOSITORY" --clobber
+          test -s dist/LICENSE
+          gh release upload "$RELEASE_TAG" "$asset" dist/LICENSE --repo "$GITHUB_REPOSITORY" --clobber

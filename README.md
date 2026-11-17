@@ -4,12 +4,17 @@
 
 CrossPoint is open-source e-reader firmware - community-built, fully hackable, free forever. It's maintained by a growing community of developers and readers who believe your device should do what you want - not what a manufacturer decided for you.
 
+This fork tracks official CrossPoint Reader and adds a focused Murphy M4 build.
+Murphy firmware artifacts are published from this repository's
+[releases](https://github.com/czdaniel/crosspoint-murphy-m4/releases) and Actions
+runs; they are not part of the official CrossPoint web installer.
+
 ### Now running on:
 
 - **ESP32C3-based** Xteink X4 and X3.
-- **ESP32S3-based** Xteink X4Pro and X4Classic, Seeed reTerminal Sticky, M5PaperMono, Metalio E-Ink 4, EEGOREAD A4 and Boox Picco.
+- **ESP32S3-based** Xteink X4Pro and X4Classic, Seeed reTerminal Sticky, M5PaperMono, Metalio E-Ink 4, EEGOREAD A4, Boox Picco and Murphy M4.
 
-Check [our Devices page](https://crosspointreader.com/devices) for the full list.
+Check the [official Devices page](https://crosspointreader.com/devices) for the upstream-supported device list.
 
 ![CrossPoint Reader running on Xteink device](./docs/images/cover.jpg)
 
@@ -127,6 +132,20 @@ esptool.py --chip esp32c3 --port /dev/ttyACM0 --baud 921600 write_flash 0x10000 
 ```bash
 esptool.py --chip esp32s3 --port /dev/ttyACM0 --baud 921600 write_flash 0x10000 /path/to/firmware.bin
 ```
+
+### Murphy M4
+
+Download the `firmware-murphy-m4.bin` artifact from a successful `main` Actions
+run and extract its contained `firmware.bin`, or download the
+`crosspoint-<version>-murphy-m4.bin` asset from this fork's releases. On a Murphy
+M4 already running CrossPoint, copy that file to the SD card and select
+Settings → System → SD Card Firmware Update. The updater writes the inactive
+application slot and selects it for the next boot.
+
+The published `.bin` is an application image, not a complete
+bootloader/partition recovery image for a blank device. Do not write it directly
+to `0x10000` unless you have independently confirmed that OTA slot 0 is selected;
+this firmware uses two OTA application slots.
 
 ### Manual
 
