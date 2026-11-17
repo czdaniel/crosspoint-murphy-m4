@@ -49,6 +49,18 @@ repository after it is publicly available.
 - Tags are immutable historical releases. Fix a broken release on `main` and
   create a new tag rather than silently moving a published tag.
 
+## Deferred Murphy investigations
+
+- Touch input can intermittently require two or three taps to register. Daniel
+  observed this during the original port, and multiple Murphy M4 users have
+  independently reported the same behavior with CrossPoint. Investigate the
+  Murphy touch-controller transaction/timing path when returning to this; do
+  not assume that application gesture handling is the root cause. Compare
+  normal and CNC/batch variants, behavior after idle or power-state changes,
+  and firmware with reportedly better touch response before proposing an SDK
+  workaround. Example reports: [October 2026 intermittent taps](https://www.reddit.com/r/ereader/comments/1wvna6t/murphy_m4_has_anyone_tried_pandacat_ai_firmware/)
+  and [October 2026 repeated-tap comparison](https://www.reddit.com/r/ereader/comments/1xgnxs9/murphy_m4_the_superior_ereader/).
+
 ## Default decision rule
 
 When there is ambiguity, prefer official CrossPoint behavior and APIs. Keep the

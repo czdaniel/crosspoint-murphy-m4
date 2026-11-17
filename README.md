@@ -143,9 +143,12 @@ Settings → System → SD Card Firmware Update. The updater writes the inactive
 application slot and selects it for the next boot.
 
 The published `.bin` is an application image, not a complete
-bootloader/partition recovery image for a blank device. Do not write it directly
-to `0x10000` unless you have independently confirmed that OTA slot 0 is selected;
-this firmware uses two OTA application slots.
+bootloader/partition recovery image for a blank device. Manual flashing to
+`0x10000` still works when OTA slot 0 is selected, as it did in earlier builds.
+If an OTA or SD-card update has selected slot 1, writing only `0x10000` does not
+change the selected boot slot, so the device can continue booting the old image.
+In that situation, use the on-device updater or otherwise verify and switch the
+OTA selection as part of the flashing procedure.
 
 ### Manual
 
